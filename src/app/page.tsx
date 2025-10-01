@@ -63,6 +63,41 @@ export default function Home() {
     setStats(getStats())
   }
 
+  const handleDownloadJSON = () => {
+    // Get all changes
+    const allChanges = changes.map(change => ({
+      timestamp: change.timestamp,
+      changeType: change.changeType,
+      changeLength: change.changeLength,
+      changePosition: change.changePosition,
+      cps: change.cps,
+      previousText: change.previousText,
+      currentText: change.currentText
+    }))
+
+    // Create download data with stats
+    const downloadData = {
+      exportDate: new Date().toISOString(),
+      statistics: stats,
+      totalChangesRecorded: allChanges.length,
+      changes: allChanges
+    }
+
+    // Convert to JSON
+    const jsonString = JSON.stringify(downloadData, null, 2)
+    
+    // Create blob and download
+    const blob = new Blob([jsonString], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `keylogger-data-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -110,6 +145,13 @@ export default function Home() {
               className={isLogging ? styles.stopButton : styles.startButton}
             >
               {isLogging ? '⏸️ Stop Logging' : '▶️ Start Logging'}
+            </button>
+            <button 
+              onClick={handleDownloadJSON}
+              disabled={!isReady || changes.length === 0}
+              className={styles.downloadButton}
+            >
+              💾 Download JSON
             </button>
             <button 
               onClick={handleClearChanges}

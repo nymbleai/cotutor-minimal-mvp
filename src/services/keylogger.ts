@@ -29,7 +29,7 @@ class KeyLogger {
     this.detectPlatform();
     this.isLogging = true;
     this.isPolling = false;
-    
+
     // Initialize the baseline document text and start polling
     this.initializeDocumentText().then(() => {
       this.scheduleNextPoll();
@@ -42,15 +42,15 @@ class KeyLogger {
   private detectPlatform(): void {
     try {
       // Check if we're in a browser environment (Word Online)
-      const isWordOnline = typeof window !== 'undefined' && 
-                         window.location && 
-                         (window.location.hostname.includes('office.com') || 
-                          window.location.hostname.includes('sharepoint.com') ||
-                          window.location.hostname.includes('outlook.com'));
-      
-    console.log(`🔍 Platform detected: ${isWordOnline ? 'Word Online' : 'Word Desktop'}`);
-    } catch (error) {
-      // console.warn('Could not detect platform, defaulting to Word Desktop:', error);
+      const isWordOnline = typeof window !== 'undefined' &&
+        window.location &&
+        (window.location.hostname.includes('office.com') ||
+          window.location.hostname.includes('sharepoint.com') ||
+          window.location.hostname.includes('outlook.com'));
+
+      console.log(`🔍 Platform detected: ${isWordOnline ? 'Word Online' : 'Word Desktop'}`);
+    } catch {
+      // console.warn('Could not detect platform, defaulting to Word Desktop');
     }
   }
 
@@ -62,7 +62,7 @@ class KeyLogger {
       const initialText = await this.getDocumentText();
       this.lastDocumentText = initialText;
       this.lastDataTimestamp = new Date(); // Set initial data timestamp
-    } catch (error) {
+    } catch {
       this.lastDocumentText = '';
       this.lastDataTimestamp = new Date(); // Set timestamp even on error
     }
@@ -90,7 +90,7 @@ class KeyLogger {
     }
 
     const now = new Date();
-    const timeSinceLastData = this.lastDataTimestamp 
+    const timeSinceLastData = this.lastDataTimestamp
       ? now.getTime() - this.lastDataTimestamp.getTime()
       : this.MIN_POLLING_INTERVAL;
 
@@ -123,26 +123,26 @@ class KeyLogger {
 
       // Get current document text
       const currentText = await this.getDocumentText();
-      
+
       // Record when we received this data
       const dataTimestamp = new Date();
-      
+
       if (currentText !== this.lastDocumentText) {
         // Calculate change using timestamps from actual data packets
         const change = this.calculateChangeWithDataTimestamps(
-          this.lastDocumentText, 
-          currentText, 
+          this.lastDocumentText,
+          currentText,
           this.lastDataTimestamp,
           dataTimestamp
         );
-        
+
         this.addChange(change);
         this.lastDocumentText = currentText;
       }
-      
+
       // Update last data timestamp regardless of whether text changed
       this.lastDataTimestamp = dataTimestamp;
-      
+
     } catch (error) {
       console.error('Error polling document change:', error);
     } finally {
@@ -175,6 +175,7 @@ class KeyLogger {
     return new Promise((resolve, reject) => {
       try {
         // Try Word.run first (works on both Desktop and Online)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         Word.run(async (context: any) => {
           try {
             const body = context.document.body;
@@ -183,18 +184,18 @@ class KeyLogger {
             const text = body.text || '';
             // console.log(`📄 Retrieved document text via Word.run: ${text.length} chars`);
             resolve(text);
-          } catch (wordRunError) {
-            // console.warn('Word.run failed, trying fallback method:', wordRunError);
+          } catch {
+            // console.warn('Word.run failed, trying fallback method');
             // Fallback: try to get text using Office.context.document
             this.getTextFallback().then(resolve).catch(reject);
           }
-        }).catch((_error: unknown) => {
-          // console.warn('Word.run initialization failed, trying fallback:', error);
+        }).catch(() => {
+          // console.warn('Word.run initialization failed, trying fallback');
           // Fallback: try to get text using Office.context.document
           this.getTextFallback().then(resolve).catch(reject);
         });
-      } catch (error: unknown) {
-        // console.warn('Word.run setup failed, trying fallback:', error);
+      } catch {
+        // console.warn('Word.run setup failed, trying fallback');
         this.getTextFallback().then(resolve).catch(reject);
       }
     });
@@ -213,9 +214,11 @@ class KeyLogger {
         }
 
         // Try to get the entire document content
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         Office.context.document.getFileAsync(Office.FileType.Text, (result: any) => {
           if (result.status === Office.AsyncResultStatus.Succeeded) {
             const file = result.value;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             file.getSliceAsync(0, (sliceResult: any) => {
               if (sliceResult.status === Office.AsyncResultStatus.Succeeded) {
                 const data = sliceResult.value.data;
@@ -254,6 +257,7 @@ class KeyLogger {
         // Try to select all and get the text
         Office.context.document.getSelectedDataAsync(
           Office.CoercionType.Text,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (result: any) => {
             if (result.status === Office.AsyncResultStatus.Succeeded) {
               const text = result.value as string || '';
@@ -277,8 +281,8 @@ class KeyLogger {
    * Calculate the difference between two text versions using data packet timestamps
    */
   private calculateChangeWithDataTimestamps(
-    previousText: string, 
-    currentText: string, 
+    previousText: string,
+    currentText: string,
     previousDataTimestamp: Date | null,
     currentDataTimestamp: Date
   ): DocumentChange {
@@ -303,8 +307,8 @@ class KeyLogger {
 
     // Calculate CPS based on time between data packets
     const cps = this.calculateCPSFromDataTimestamps(
-      changeLength, 
-      previousDataTimestamp, 
+      changeLength,
+      previousDataTimestamp,
       currentDataTimestamp
     );
 
@@ -350,13 +354,13 @@ class KeyLogger {
   private countDifferences(text1: string, text2: string): number {
     const maxLength = Math.max(text1.length, text2.length);
     let differences = 0;
-    
+
     for (let i = 0; i < maxLength; i++) {
       if ((text1[i] || '') !== (text2[i] || '')) {
         differences++;
       }
     }
-    
+
     return differences;
   }
 
@@ -364,8 +368,8 @@ class KeyLogger {
    * Calculate Characters Per Second (CPS) based on data packet timestamps
    */
   private calculateCPSFromDataTimestamps(
-    changeLength: number, 
-    previousDataTimestamp: Date | null, 
+    changeLength: number,
+    previousDataTimestamp: Date | null,
     currentDataTimestamp: Date
   ): number {
     if (!previousDataTimestamp || changeLength === 0) {
@@ -389,7 +393,7 @@ class KeyLogger {
    */
   private addChange(change: DocumentChange): void {
     this.changes.push(change);
-    
+
     // Keep only the last 50 changes
     if (this.changes.length > this.MAX_CHANGES) {
       this.changes = this.changes.slice(-this.MAX_CHANGES);
@@ -445,20 +449,20 @@ class KeyLogger {
     const additions = this.changes.filter(c => c.changeType === 'addition').length;
     const deletions = this.changes.filter(c => c.changeType === 'deletion').length;
     const modifications = this.changes.filter(c => c.changeType === 'modification').length;
-    
+
     // Calculate CPS statistics
     const cpsValues = this.changes.map(c => c.cps).filter(cps => cps > 0);
     const avgCPS = cpsValues.length > 0 ? cpsValues.reduce((sum, cps) => sum + cps, 0) / cpsValues.length : 0;
     const maxCPS = cpsValues.length > 0 ? Math.max(...cpsValues) : 0;
-    
+
     // Calculate total characters changed
     const totalCharsChanged = this.changes.reduce((sum, c) => sum + c.changeLength, 0);
-    
+
     // Get current CPS (from last 5 changes)
     const recentChanges = this.changes.slice(-5);
     const recentCpsValues = recentChanges.map(c => c.cps).filter(cps => cps > 0);
     const currentCPS = recentCpsValues.length > 0 ? recentCpsValues[recentCpsValues.length - 1] : 0;
-    
+
     return {
       totalChanges,
       additions,
@@ -475,7 +479,7 @@ class KeyLogger {
   /**
    * Get detailed CPS information for the last N changes
    */
-  getCPSHistory(count: number = 10): Array<{timestamp: Date, cps: number, changeType: string}> {
+  getCPSHistory(count: number = 10): Array<{ timestamp: Date, cps: number, changeType: string }> {
     return this.changes.slice(-count).map(change => ({
       timestamp: change.timestamp,
       cps: change.cps,
@@ -497,7 +501,7 @@ class KeyLogger {
       changePosition: 0,
       cps: 5.0
     };
-    
+
     this.addChange(testChange);
     // console.log('🧪 Added test change. Total changes:', this.changes.length);
   }
@@ -515,7 +519,7 @@ class KeyLogger {
     // console.log('- Office available:', typeof window.Office !== 'undefined');
     // console.log('- Context available:', !!(window.Office && Office.context));
     // console.log('- Document available:', !!(window.Office && Office.context && Office.context.document));
-    
+
     if (this.changes.length > 0) {
       // console.log('- Recent changes:', this.changes.slice(-3));
     } else {

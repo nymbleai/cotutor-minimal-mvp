@@ -139,6 +139,16 @@
   transform: translateY(-1px);
 }
 
+.downloadButton {
+  background: #3b82f6;
+  color: white;
+}
+
+.downloadButton:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
 .clearButton {
   background: #6b7280;
   color: white;
