@@ -4,7 +4,7 @@ interface DocumentChange {
   currentText: string;
   changeType: 'addition' | 'deletion' | 'modification';
   changeLength: number;
-  changePosition: number;
+  changeIndex: number;
   cps: number; // Characters per second
 }
 
@@ -287,22 +287,22 @@ class KeyLogger {
     currentDataTimestamp: Date
   ): DocumentChange {
     let changeType: 'addition' | 'deletion' | 'modification' = 'modification';
-    let changePosition = 0;
+    let changeIndex = 0;
     let changeLength = 0;
 
     // Simple diff calculation
     if (currentText.length > previousText.length) {
       changeType = 'addition';
       changeLength = currentText.length - previousText.length;
-      changePosition = this.findChangePosition(previousText, currentText);
+      changeIndex = this.findChangePosition(previousText, currentText);
     } else if (currentText.length < previousText.length) {
       changeType = 'deletion';
       changeLength = previousText.length - currentText.length;
-      changePosition = this.findChangePosition(currentText, previousText);
+      changeIndex = this.findChangePosition(currentText, previousText);
     } else {
       changeType = 'modification';
       changeLength = this.countDifferences(previousText, currentText);
-      changePosition = this.findFirstDifference(previousText, currentText);
+      changeIndex = this.findFirstDifference(previousText, currentText);
     }
 
     // Calculate CPS based on time between data packets
@@ -318,7 +318,7 @@ class KeyLogger {
       currentText,
       changeType,
       changeLength,
-      changePosition,
+      changeIndex,
       cps
     };
   }
@@ -498,7 +498,7 @@ class KeyLogger {
       currentText: 'Test current text with more content',
       changeType: 'addition',
       changeLength: 25,
-      changePosition: 0,
+      changeIndex: 0,
       cps: 5.0
     };
 

@@ -50,13 +50,7 @@ export default function Home() {
     }
   }, [isReady, isLogging, startLogging])
 
-  const handleToggleLogging = () => {
-    if (isLogging) {
-      stopLogging()
-    } else {
-      startLogging()
-    }
-  }
+  // Removed toggle - logging is always on when ready
 
   const handleClearChanges = () => {
     clearChanges()
@@ -69,7 +63,7 @@ export default function Home() {
       timestamp: change.timestamp,
       changeType: change.changeType,
       changeLength: change.changeLength,
-      changePosition: change.changePosition,
+      changeIndex: change.changeIndex,
       cps: change.cps,
       previousText: change.previousText,
       currentText: change.currentText
@@ -102,77 +96,74 @@ export default function Home() {
     <div className={styles.page}>
       <main className={styles.main}>
         <div className={styles.header}>
-          <h1>📝 Office.js KeyLogger MVP</h1>
-          <p className={styles.subtitle}>Minimal keystroke tracking for Word documents</p>
+          <h1>Keystroke Analytics</h1>
+          <p className={styles.subtitle}>Real-time document activity tracking</p>
         </div>
 
         {/* Office.js Status */}
         <div className={styles.statusCard}>
-          <h2>🔌 Office.js Status</h2>
+          <div className={styles.statusHeader}>
+            <h2>Connection Status</h2>
+            {isReady && isLogging && (
+              <span className={styles.activeBadge}>Active</span>
+            )}
+          </div>
           {isLoading && (
             <div className={styles.status}>
               <span className={styles.statusDot + ' ' + styles.loading}></span>
-              <span>Loading Office.js...</span>
+              <span>Initializing connection...</span>
             </div>
           )}
           {error && (
             <div className={styles.status}>
               <span className={styles.statusDot + ' ' + styles.error}></span>
-              <span>Error: {error}</span>
+              <span>{error}</span>
             </div>
           )}
           {isReady && (
             <div className={styles.status}>
               <span className={styles.statusDot + ' ' + styles.ready}></span>
-              <span>Ready - Word Context Detected</span>
+              <span>Connected to Word document</span>
             </div>
           )}
           {!isLoading && !isReady && !error && (
             <div className={styles.status}>
               <span className={styles.statusDot + ' ' + styles.notReady}></span>
-              <span>Not in Word context</span>
+              <span>Awaiting Word context</span>
             </div>
           )}
         </div>
 
-        {/* Logging Controls */}
-        <div className={styles.controlsCard}>
-          <h2>🎮 Controls</h2>
-          <div className={styles.controls}>
-            <button 
-              onClick={handleToggleLogging}
-              disabled={!isReady}
-              className={isLogging ? styles.stopButton : styles.startButton}
-            >
-              {isLogging ? '⏸️ Stop Logging' : '▶️ Start Logging'}
-            </button>
+        {/* Actions */}
+        <div className={styles.actionsCard}>
+          <div className={styles.actions}>
             <button 
               onClick={handleDownloadJSON}
               disabled={!isReady || changes.length === 0}
               className={styles.downloadButton}
             >
-              💾 Download JSON
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 11L4 7H6V3H10V7H12L8 11Z" fill="currentColor"/>
+                <path d="M3 13H13V15H3V13Z" fill="currentColor"/>
+              </svg>
+              Export Data
             </button>
             <button 
               onClick={handleClearChanges}
               disabled={!isReady || changes.length === 0}
               className={styles.clearButton}
             >
-              🗑️ Clear Changes
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 2V1H11V2H14V4H2V2H5ZM3 5H13V14C13 14.5523 12.5523 15 12 15H4C3.44772 15 3 14.5523 3 14V5Z" fill="currentColor"/>
+              </svg>
+              Clear Data
             </button>
-          </div>
-          <div className={styles.loggingStatus}>
-            {isLogging ? (
-              <span className={styles.activeStatus}>🟢 Logging Active</span>
-            ) : (
-              <span className={styles.inactiveStatus}>🔴 Logging Stopped</span>
-            )}
           </div>
         </div>
 
         {/* Statistics */}
         <div className={styles.statsCard}>
-          <h2>📊 Statistics</h2>
+          <h2>Analytics Overview</h2>
           <div className={styles.statsGrid}>
             <div className={styles.statItem}>
               <div className={styles.statLabel}>Total Changes</div>
@@ -211,28 +202,27 @@ export default function Home() {
 
         {/* Recent Changes */}
         <div className={styles.changesCard}>
-          <h2>📜 Recent Changes (Last 10)</h2>
+          <h2>Activity Log</h2>
+          <p className={styles.subtitle}>Last 10 detected changes</p>
           {changes.length === 0 ? (
-            <p className={styles.noChanges}>No changes recorded yet. Start typing in your Word document!</p>
+            <p className={styles.noChanges}>Awaiting document activity</p>
           ) : (
             <div className={styles.changesList}>
               {changes.slice(-10).reverse().map((change, index) => (
                 <div key={index} className={styles.changeItem}>
                   <div className={styles.changeHeader}>
-                    <span className={styles.changeType + ' ' + styles[change.changeType]}>
-                      {change.changeType === 'addition' && '➕'}
-                      {change.changeType === 'deletion' && '➖'}
-                      {change.changeType === 'modification' && '✏️'}
-                      {' '}{change.changeType}
-                    </span>
-                    <span className={styles.changeTime}>
-                      {new Date(change.timestamp).toLocaleTimeString()}
-                    </span>
+                    <div className={styles.changeTypeWrapper}>
+                      <span className={styles.changeType + ' ' + styles[change.changeType]}>
+                        {change.changeType}
+                      </span>
+                      <span className={styles.changeTime}>
+                        {new Date(change.timestamp).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <span className={styles.cpsValue}>{change.cps.toFixed(1)} CPS</span>
                   </div>
                   <div className={styles.changeDetails}>
-                    <span>Length: {change.changeLength} chars</span>
-                    <span>Position: {change.changePosition}</span>
-                    <span>CPS: {change.cps.toFixed(2)}</span>
+                    <span>{change.changeLength} characters at index {change.changeIndex}</span>
                   </div>
                 </div>
               ))}
@@ -243,13 +233,11 @@ export default function Home() {
         {/* Instructions */}
         {!isWordContext && (
           <div className={styles.instructionsCard}>
-            <h2>ℹ️ How to Use</h2>
-            <ol className={styles.instructions}>
-              <li>This is an Office.js Word Add-in</li>
-              <li>To test it, you need to load it in Microsoft Word (Online or Desktop)</li>
-              <li>Follow the Office Add-in documentation to sideload this app</li>
-              <li>Once loaded in Word, keylogging will start automatically</li>
-            </ol>
+            <h2>Setup Required</h2>
+            <p className={styles.instructionText}>
+              This application must be loaded as a Word Add-in to function. 
+              Upload the manifest.xml file via Insert → Add-ins → Upload My Add-in in Microsoft Word.
+            </p>
           </div>
         )}
       </main>

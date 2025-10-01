@@ -16,15 +16,15 @@
   <Description DefaultValue="Minimal keystroke tracking for Word documents"/>
   
   <!-- Icon for your add-in. Used on installation screens and the add-ins dialog. -->
-  <IconUrl DefaultValue="https://localhost:3000/next.svg"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:3000/next.svg"/>
+  <IconUrl DefaultValue="https://cotutor-minimal-mvp.onrender.com/next.svg"/>
+  <HighResolutionIconUrl DefaultValue="https://cotutor-minimal-mvp.onrender.com/next.svg"/>
   
   <!--Begin Basic Settings: Add-in metadata, used for all versions of Office unless override provided. -->
-  <SupportUrl DefaultValue="https://localhost:3000"/>
+  <SupportUrl DefaultValue="https://cotutor-minimal-mvp.onrender.com"/>
   
   <!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
   <AppDomains>
-    <AppDomain>https://localhost:3000</AppDomain>
+    <AppDomain>https://cotutor-minimal-mvp.onrender.com</AppDomain>
   </AppDomains>
   
   <!-- Specifies the contexts where the add-in can be activated. Document = Word -->
@@ -33,7 +33,7 @@
   </Hosts>
   
   <DefaultSettings>
-    <SourceLocation DefaultValue="https://localhost:3000"/>
+    <SourceLocation DefaultValue="https://cotutor-minimal-mvp.onrender.com"/>
   </DefaultSettings>
   
   <!-- Permissions that the add-in requires -->
@@ -92,14 +92,14 @@
     <!-- Resources section defines all strings, URLs, and images used in the manifest -->
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://localhost:3000/next.svg"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://localhost:3000/next.svg"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://localhost:3000/next.svg"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://cotutor-minimal-mvp.onrender.com/next.svg"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://cotutor-minimal-mvp.onrender.com/next.svg"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://cotutor-minimal-mvp.onrender.com/next.svg"/>
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://localhost:3000"/>
-        <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000"/>
-        <bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000"/>
+        <bt:Url id="GetStarted.LearnMoreUrl" DefaultValue="https://cotutor-minimal-mvp.onrender.com"/>
+        <bt:Url id="Commands.Url" DefaultValue="https://cotutor-minimal-mvp.onrender.com"/>
+        <bt:Url id="Taskpane.Url" DefaultValue="https://cotutor-minimal-mvp.onrender.com"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GetStarted.Title" DefaultValue="Get started with KeyLogger"/>
