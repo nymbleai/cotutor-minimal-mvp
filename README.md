@@ -159,7 +159,7 @@ Create `manifest.xml` in the project root:
 - Polls every 1 second using Office.js API
 - Compares current document text with previous snapshot
 - Calculates change type, position, length, and typing speed
-- Stores last 50 changes in memory
+- Stores unlimited changes in memory for entire session
 
 ### 2. **Office.js Hook** (`useOfficeJs.ts`)
 
@@ -214,13 +214,9 @@ Change the polling frequency in `keylogger.ts`:
 private readonly MIN_POLLING_INTERVAL = 1000; // milliseconds
 ```
 
-### Max Changes Stored
+### Storage
 
-Adjust how many changes are kept in memory:
-
-```typescript
-private readonly MAX_CHANGES = 50; // number of changes
-```
+All changes are stored in memory for the entire session with no limit. To prevent memory issues with extremely long sessions, you can manually call `clearChanges()` to reset the log.
 
 ## 🚫 Limitations
 
@@ -229,6 +225,7 @@ private readonly MAX_CHANGES = 50; // number of changes
 3. **Memory-only storage** - Changes are not persisted (cleared on refresh)
 4. **Requires Word context** - Only works when loaded as a Word Add-in
 5. **No backend integration** - Data stays in the frontend (can be added)
+6. **Memory usage** - For very long sessions with thousands of changes, memory usage may grow
 
 ## 🔮 Future Enhancements
 

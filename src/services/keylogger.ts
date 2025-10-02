@@ -13,7 +13,6 @@ class KeyLogger {
   private timeoutId: NodeJS.Timeout | null = null;
   private lastDocumentText: string = '';
   private changes: DocumentChange[] = [];
-  private readonly MAX_CHANGES = 50;
   private readonly MIN_POLLING_INTERVAL = 1000; // 1 second minimum between polls
   private lastDataTimestamp: Date | null = null;
   private isPolling: boolean = false;
@@ -479,15 +478,11 @@ class KeyLogger {
   }
 
   /**
-   * Add a change to the changes array, maintaining max size
+   * Add a change to the changes array (unlimited storage)
    */
   private addChange(change: DocumentChange): void {
     this.changes.push(change);
-
-    // Keep only the last 50 changes
-    if (this.changes.length > this.MAX_CHANGES) {
-      this.changes = this.changes.slice(-this.MAX_CHANGES);
-    }
+    // No limit - track all changes for the entire session
   }
 
   /**
