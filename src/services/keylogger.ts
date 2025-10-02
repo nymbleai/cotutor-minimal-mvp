@@ -136,7 +136,13 @@ class KeyLogger {
           dataTimestamp
         );
 
-        this.addChange(change);
+        // Handle both single change and array of changes (for replacements)
+        if (Array.isArray(change)) {
+          change.forEach(c => this.addChange(c));
+        } else {
+          this.addChange(change);
+        }
+
         this.lastDocumentText = currentText;
       }
 
@@ -279,18 +285,58 @@ class KeyLogger {
 
   /**
    * Calculate the difference between two text versions using data packet timestamps
+   * This now detects replacements and can return multiple changes (delete + add)
    */
   private calculateChangeWithDataTimestamps(
     previousText: string,
     currentText: string,
     previousDataTimestamp: Date | null,
     currentDataTimestamp: Date
-  ): DocumentChange {
+  ): DocumentChange | DocumentChange[] {
+    // Detect if this is a replacement operation (text changed at same position)
+    const replacement = this.detectReplacement(previousText, currentText);
+
+    if (replacement) {
+      // Split into delete + add operations
+      const cps = this.calculateCPSFromDataTimestamps(
+        replacement.deletedLength + replacement.addedLength,
+        previousDataTimestamp,
+        currentDataTimestamp
+      );
+
+      // Calculate intermediate text (after deletion, before addition)
+      const intermediateText =
+        previousText.slice(0, replacement.startIndex) +
+        previousText.slice(replacement.startIndex + replacement.deletedLength);
+
+      const deleteChange: DocumentChange = {
+        timestamp: currentDataTimestamp,
+        previousText,
+        currentText: intermediateText,
+        changeType: 'deletion',
+        changeLength: replacement.deletedLength,
+        changeIndex: replacement.startIndex,
+        cps: cps / 2 // Split CPS between both operations
+      };
+
+      const addChange: DocumentChange = {
+        timestamp: currentDataTimestamp,
+        previousText: intermediateText,
+        currentText,
+        changeType: 'addition',
+        changeLength: replacement.addedLength,
+        changeIndex: replacement.startIndex,
+        cps: cps / 2
+      };
+
+      return [deleteChange, addChange];
+    }
+
+    // Original simple diff calculation for non-replacement changes
     let changeType: 'addition' | 'deletion' | 'modification' = 'modification';
     let changeIndex = 0;
     let changeLength = 0;
 
-    // Simple diff calculation
     if (currentText.length > previousText.length) {
       changeType = 'addition';
       changeLength = currentText.length - previousText.length;
@@ -321,6 +367,50 @@ class KeyLogger {
       changeIndex,
       cps
     };
+  }
+
+  /**
+   * Detect if a change is a replacement operation (delete + add at same position)
+   * Returns the deleted and added lengths if it's a replacement, null otherwise
+   */
+  private detectReplacement(
+    previousText: string,
+    currentText: string
+  ): { startIndex: number; deletedLength: number; addedLength: number } | null {
+    // Find the common prefix
+    let prefixEnd = 0;
+    const minLength = Math.min(previousText.length, currentText.length);
+    while (prefixEnd < minLength && previousText[prefixEnd] === currentText[prefixEnd]) {
+      prefixEnd++;
+    }
+
+    // Find the common suffix
+    let suffixStart = 0;
+    const remainingLengthPrev = previousText.length - prefixEnd;
+    const remainingLengthCurr = currentText.length - prefixEnd;
+    const minRemaining = Math.min(remainingLengthPrev, remainingLengthCurr);
+
+    while (suffixStart < minRemaining &&
+      previousText[previousText.length - 1 - suffixStart] ===
+      currentText[currentText.length - 1 - suffixStart]) {
+      suffixStart++;
+    }
+
+    // Calculate what was deleted and added
+    const deletedLength = previousText.length - prefixEnd - suffixStart;
+    const addedLength = currentText.length - prefixEnd - suffixStart;
+
+    // If both deletion and addition occurred at the same position, it's a replacement
+    // We only treat it as replacement if both operations are non-zero
+    if (deletedLength > 0 && addedLength > 0) {
+      return {
+        startIndex: prefixEnd,
+        deletedLength,
+        addedLength
+      };
+    }
+
+    return null;
   }
 
   /**
